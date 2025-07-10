@@ -1,0 +1,25 @@
+{
+    "WIKI_TAXA": {
+        "LINKS": {},
+        "DATA": {
+            "Taxon rank": "species",
+            "Species": "Leptothorax muscorum",
+            "Family": "Leptothorax"
+        },
+        "PAGE_TITLE": "Leptothorax muscorum",
+        "PAGE_LINK": "https://en.wikipedia.org/wiki/Leptothorax_muscorum",
+        "SUMMARY": " Leptothorax muscorum is a species of ant of the genus Leptothorax that ranges through a variety of habitats throughout much of Europe, northern Asia, and North and Central America, with a particularly wide distribution in the palearctic.  Capable of surviving in extreme Arctic-Alpine conditions, the species is perhaps the northernmost dwelling ant indigenous to the Western Hemisphere.\n\nPage: Leptothorax\n"
+    },
+    "WIKI_GEO": {
+        "DATA": {},
+        "PAGE_LINK": "https://en.wikipedia.org/wiki/Tompkins_County,_New_York",
+        "PAGE_TITLE": "Tompkins County, New York",
+        "SUMMARY": " Tompkins County is a county located in the U.S. state of New York. As of the 2020 census, the population was 105,740. The county seat is Ithaca. The name is in honor of Daniel D. Tompkins, who served as Governor of New York and Vice President of the United States. The county is part of the Southern Tier region of the state.\nTompkins County comprises the Ithaca Metropolitan Statistical Area. It is home to Cornell University, Ithaca College and Tompkins Cortland Community College.\n\nPage: New York City\n"
+    },
+    "WIKI_LOCALITY": {
+        "DATA": {},
+        "PAGE_TITLE": "Ithaca, New York",
+        "PAGE_LINK": "https://en.wikipedia.org/wiki/Ithaca,_New_York",
+        "SUMMARY": " Ithaca () is a city in and the county seat of Tompkins County, New York, United States. Situated on the southern shore of Cayuga Lake in the Finger Lakes region of New York, Ithaca is the largest community in the Ithaca metropolitan statistical area. It is named after the Greek island of Ithaca.  As of 2020, the city's population was 32,108.\nA college town, Ithaca is home to Cornell University, an Ivy League university, and Ithaca College. Nearby is Tompkins Cortland Community College (TC3), located in Dryden.\n\n\n\nPage: Ithaca (island)\n"
+    }
+}

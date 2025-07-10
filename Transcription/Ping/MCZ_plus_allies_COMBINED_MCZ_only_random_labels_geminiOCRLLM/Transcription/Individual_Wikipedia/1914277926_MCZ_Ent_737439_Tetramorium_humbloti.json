@@ -1,0 +1,22 @@
+{
+    "WIKI_TAXA": {
+        "LINKS": {},
+        "DATA": {
+            "Species": "Tetramorium",
+            "Taxon rank": "genus",
+            "Family": "Tetramoriini"
+        },
+        "PAGE_TITLE": "Tetramorium",
+        "PAGE_LINK": "https://en.wikipedia.org/wiki/Tetramorium",
+        "SUMMARY": " Tetramorium is a genus of ants in the subfamily Myrmicinae that includes more than 520 species. These ants are also known as pavement ants."
+    },
+    "WIKI_GEO": {
+        "DATA": {},
+        "PAGE_LINK": "https://en.wikipedia.org/wiki/Sofala_Province",
+        "PAGE_TITLE": "Sofala Province",
+        "SUMMARY": " Sofala [su\u02c8fal\u0250] is a province of Mozambique. It has a population of 2,259,248 (2017 census). Beira is the capital of the province, named for the ruined port of Sofala which is 35 kilometres (22 mi) to the south.\n\nPage: Sofala\n"
+    },
+    "WIKI_LOCALITY": {
+        "DATA": {}
+    }
+}

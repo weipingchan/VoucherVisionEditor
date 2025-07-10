@@ -13,5 +13,5 @@ editor:
   # - identificationHistory
 locations:
   # "local"
-  # Edited files will live somewhere like this: S:/VoucherVision/Transcription/UNIQNAME/WORKBENCH_NAME/Transcription/transcribed__edited__2024_10_08T16_40_31.xlsx
-  project_dir: ["S:/Curatorial Projects/VoucherVision/Transcription","S:/VoucherVision/Transcription" ]
+ # Edited files will live somewhere like this: S:/VoucherVision/Transcription/UNIQNAME/WORKBENCH_NAME/Transcription/transcribed__edited__2024_10_08T16_40_31.xlsx
+  project_dir: ["D:/WP_work/Github/wpchanwork/VoucherVisionEditor/Transcription","S:/VoucherVision/Transcription" ]

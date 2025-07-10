@@ -25,6 +25,15 @@ import itables.options as opt
 from itables import to_html_datatable, init_notebook_mode, show, JavascriptCode
 from itables.downsample import as_nbytes, nbytes
 from itables.sample_dfs import get_indicators
+from PIL import Image
+
+from image_utils import (
+    image_path_and_load,
+    display_image_options_buttons,
+    display_scrollable_image,
+    display_image_rotation_buttons,
+)
+
 # init_notebook_mode(all_interactive=True)
 opt.maxBytes = 0  # Set maxBytes to 0 to remove any size restrictions
 opt.maxRows = 0   # No limit on number of rows
@@ -165,7 +174,7 @@ if 'set_map_height_pxh' not in st.session_state:
     st.session_state.set_map_height_pxh = 200
 
 if 'image_fill' not in st.session_state:
-    st.session_state.image_fill = "More - Image Right"
+    st.session_state.image_fill = "Small Screen"
 
 if 'use_extra_image_options' not in st.session_state:
     st.session_state.use_extra_image_options = False
@@ -645,12 +654,12 @@ def add_new_user():
 def upload_and_unzip():
     file_path = os.path.join(st.session_state.dir_home, 'settings', 'default.yaml')
 
-    c_left, c_right = st.columns([8,2])
+    cc_right, cc_left = st.columns([8,2])
 
-    with c_right:
+    with cc_left:
         st.markdown(""":violet-background[NOTE:]\n\n- Refreshing your browser will restart VoucherVisionEditor from this page and reset all settings\n\n- In the Editor, every change you make is immediately saved to the session's .xlsx file""")
         st.markdown(f"Last Updated: {LAST_UPDATED}")
-    with c_left:
+    with cc_right:
 
         # Load existing settings
         st.session_state.settings = load_yaml_settings(file_path)
@@ -823,13 +832,6 @@ def prompt_for_mapbox_key():
     mapbox_key = st.text_input('Enter your Mapbox key here:', '')
 
     return mapbox_key
-
-# Function to convert image to base64
-def image_to_base64(img):
-    buffered = BytesIO()
-    img.save(buffered, format="JPEG")
-    return base64.b64encode(buffered.getvalue()).decode()
-
 
 # Use SAVE_DIR where needed
 # def save_data():
@@ -1431,112 +1433,116 @@ def show_header_welcome():
         st.markdown(hide_img_fs, unsafe_allow_html=True)
 
 def show_header_main():
-    with st.sidebar:
+    with st.container():
         # Logo and Title
-        h1, h2, h3 = st.columns([1,6,1])
-        with h2:
+        h1, h2, h3 = st.columns([1,8,1])
+        with h1:
             st.image(f"http://localhost:8000/{st.session_state.logo_path}", use_container_width=True)
             # st.markdown("<h1 style='text-align: center;'>VoucherVision Editor</h1>", unsafe_allow_html=True)
             # Use the first column for the logo and the second for the title
             # st.image("img/logo.png", width=200)  # adjust width as needed
             # st.markdown(f'<a href="https://github.com/Gene-Weaver/VoucherVisionEditor"><img src="http://localhost:8000/{st.session_state.logo_path}" width="100"></a>', unsafe_allow_html=True)
+        with h2:
+            # Display the title and email
+            st.markdown("<h1 style='text-align: center; font-size:100px; background-color:#B22222; color:white;'>HTD Refinery</h1>", unsafe_allow_html=True)
+        with h3:
+            st.markdown("<h2 style='text-align: right; font-size:14px;'><a href='mailto:chanw@g.harvard.edu'>chanw@g.harvard.edu</a></h2>", unsafe_allow_html=True)
+
+def show_header_main_extra():
+    """ st.session_state.default_to_original = st.sidebar.checkbox("Default to Original image each time 'Next' or 'Previous' is pressed.", value=True)  
+
+    # Image Layout Focus selectbox
+    st.session_state.image_fill = st.sidebar.selectbox("Image Layout Focus", ["More - Image Right", "Balanced - Image Right",  "Maximum - Image Right",
+                                                                                "Small Screen",
+                                                                                "More - Image Left", "Balanced - Image Left", "Maximum - Image Left",])
+
+    # Image Size selectbox
+    st.session_state.set_image_size = st.sidebar.selectbox("Image Size", ["Custom", "Medium", "Large", "Small", "Auto Width", "Fitted"])
+
+    # Set Image Width slider
+    if st.session_state.set_image_size == "Custom":
+        image_sizes = list(range(200, 2601, 50))
+        st.session_state.set_image_size_px = st.select_slider('Set Image Width', options=image_sizes, value=st.session_state.set_image_size_px)
+
+    # Set Viewing Height slider
+    if st.session_state.set_image_size != "Auto Width":
+        image_sizes = list(range(20, 401, 5))
+        st.session_state.set_image_size_pxh = st.select_slider('Set Viewing Height', options=image_sizes, value=st.session_state.set_image_size_pxh)
+
+    # Set Map Height slider
+    if st.session_state.set_map_height:
+        image_sizes = list(range(50, 501, 10))
+        st.session_state.set_map_height_pxh = st.select_slider('Set Map Height', options=image_sizes, value=st.session_state.set_map_height_pxh)
+
+    wrap_len = list(range(10, 101, 1))
+    st.session_state.form_width = st.select_slider('Text wrapping length for form values', options=wrap_len, value=20)
+    # Location of the form record TRUTH
+
+    st.session_state.color_table_viewed = st.color_picker("Color of Viewed Records in the Table", "#009ec4")
+    st.session_state.color_table_issue = st.color_picker("Color of Bookmarked Records in the Table", "#F08080")
+    st.session_state.color_table_ignored = st.color_picker("Color of Ignored Records in the Table", "#000000")
+
+    # Location of the Google Search
+    if st.session_state.image_fill == "Small Screen":
+        st.session_state.location_google_search = st.sidebar.selectbox("Location of Google Search - Small Screen", ["Top", "Bottom"])
+    else:
+        st.session_state.location_google_search = st.sidebar.selectbox("Location of Google Search", ["Top", "Hint Panel", "Bottom"])
+    
+    st.session_state.google_search_new_window = st.sidebar.checkbox("Open Google search in new browser tab", value=st.session_state.google_search_new_window)
+
+    st.session_state.tool_access['show_skip_specimen'] = st.sidebar.checkbox("Show the 'skip specimen' button", value=st.session_state.tool_access['show_skip_specimen'])
+
+    ######## Additional Options ################
+    st.sidebar.header('Options') #,help='Visible as Admin')
+
+    # Access selectbox
+    user_pwd = st.text_input("Admin Password", type="password",help="use: vouchervisionadmin")
+    if user_pwd == st.session_state.pwd:
+        st.session_state.access_option = st.sidebar.selectbox("Access", ["Labeler", "Admin"])
+    else:
+        st.session_state.access_option = st.sidebar.selectbox("Access", ["Labeler", "Admin"], disabled=True)
+
+    if st.session_state.access_option in ["Admin",] and user_pwd == st.session_state.pwd:
+        st.session_state.form_hint_location = st.sidebar.selectbox("Position of the form hints", ["Left", "Right"])
+        # Warning message for 
+        distances_GPS = list(range(0, 501, 10))
+        st.session_state.distance_GPS_warn = st.select_slider('Display warning message if Verbarim/Decimal coordinates disagree by more than X km.', options=distances_GPS, value=100)
+
+        st.session_state.tool_access['hints'] = st.checkbox("Display WFO and GEO form hints",value=st.session_state.tool_access.get('hints'))
+        if not st.session_state.tool_access['hints']:
+            st.session_state.tool_access['arrow'] = False
+            # st.session_state.form_width = st.session_state.form_width_2
+            st.session_state.tool_access['arrow'] = st.checkbox("Display move arrow button for form hints :arrow_forward:",value=st.session_state.tool_access.get('hints'),disabled=True)
+        else:
+            # st.session_state.form_width = st.session_state.form_width_1
+            st.session_state.tool_access['arrow'] = st.checkbox("Display move arrow button for form hints :arrow_forward:",value=st.session_state.tool_access.get('arrow'),disabled=False)
+
+        st.session_state.tool_access['show_skip_specimen'] = st.checkbox("Display button to skip specimen and add it to transcribed_skipped.xlsx",value=st.session_state.tool_access.get('show_skip_specimen'))
+        st.session_state.tool_access['ocr'] = st.checkbox("Display button to view OCR image",value=st.session_state.tool_access.get('ocr'))
+        st.session_state.tool_access['wfo_badge'] = st.checkbox("Display WFO badge",value=st.session_state.tool_access.get('wfo_badge'))
+        st.session_state.tool_access['taxa_links'] = st.checkbox("Display buttons for Wikipedia (taxonomy), POWO, GRIN",value=st.session_state.tool_access.get('taxa_links'))
+        st.session_state.tool_access['wfo_links'] = st.checkbox("Display top 10 list of WFO taxa (WFO partial matches)",value=st.session_state.tool_access.get('wfo_links'))
+        st.session_state.tool_access['additional_info'] = st.checkbox("Display additional project information at page bottom",value=st.session_state.tool_access.get('additional_info'))
+        st.session_state.tool_access['cap'] = st.checkbox("Display capitalization buttons :eject: and :arrow_double_down:",value=st.session_state.tool_access.get('cap'))
+        st.session_state.tool_access['search'] = st.checkbox("Display quick search buttons :mag:",value=st.session_state.tool_access.get('search'))
+    
+        # # Choose a View selectbox
+        # st.session_state.view_option = st.sidebar.selectbox("Choose a View", ["Form View", "Data Editor"], disabled=True)
+
+        # # Store previous image size
+        # st.session_state.set_image_size_previous = st.session_state.set_image_size
+
+        # st.session_state.use_extra_image_options = st.sidebar.checkbox("Include toggle for fitted image view.", value=False)
+        # if st.session_state.use_extra_image_options:
+        #     image_sizes_fitted = list(range(100, 1201, 50))
+        #     st.session_state.set_image_size_px = st.select_slider(
+        #         'Set Fitted Image Width',
+        #         options=image_sizes_fitted,value=600)
         
-            st.markdown(f"<h2 style='text-align: center;'><a href='https://forms.gle/kP8imC9JQTPLrXgg8' target='_blank'>Report a Bug</a></h2>", unsafe_allow_html=True)
-
-        st.session_state.default_to_original = st.sidebar.checkbox("Default to Original image each time 'Next' or 'Previous' is pressed.", value=True)  
-
-        # Image Layout Focus selectbox
-        st.session_state.image_fill = st.sidebar.selectbox("Image Layout Focus", ["More - Image Right", "Balanced - Image Right",  "Maximum - Image Right",
-                                                                                  "Small Screen",
-                                                                                  "More - Image Left", "Balanced - Image Left", "Maximum - Image Left",])
-
-        # Image Size selectbox
-        st.session_state.set_image_size = st.sidebar.selectbox("Image Size", ["Custom", "Medium", "Large", "Small", "Auto Width", "Fitted"])
-
-        # Set Image Width slider
-        if st.session_state.set_image_size == "Custom":
-            image_sizes = list(range(200, 2601, 50))
-            st.session_state.set_image_size_px = st.select_slider('Set Image Width', options=image_sizes, value=st.session_state.set_image_size_px)
-
-        # Set Viewing Height slider
-        if st.session_state.set_image_size != "Auto Width":
-            image_sizes = list(range(20, 401, 5))
-            st.session_state.set_image_size_pxh = st.select_slider('Set Viewing Height', options=image_sizes, value=st.session_state.set_image_size_pxh)
-
-        # Set Map Height slider
-        if st.session_state.set_map_height:
-            image_sizes = list(range(50, 501, 10))
-            st.session_state.set_map_height_pxh = st.select_slider('Set Map Height', options=image_sizes, value=st.session_state.set_map_height_pxh)
-
-        wrap_len = list(range(10, 101, 1))
-        st.session_state.form_width = st.select_slider('Text wrapping length for form values', options=wrap_len, value=20)
-        # Location of the form record TRUTH
-
-        st.session_state.color_table_viewed = st.color_picker("Color of Viewed Records in the Table", "#009ec4")
-        st.session_state.color_table_issue = st.color_picker("Color of Bookmarked Records in the Table", "#F08080")
-        st.session_state.color_table_ignored = st.color_picker("Color of Ignored Records in the Table", "#000000")
-
-        # Location of the Google Search
-        if st.session_state.image_fill == "Small Screen":
-            st.session_state.location_google_search = st.sidebar.selectbox("Location of Google Search - Small Screen", ["Top", "Bottom"])
-        else:
-            st.session_state.location_google_search = st.sidebar.selectbox("Location of Google Search", ["Top", "Hint Panel", "Bottom"])
+        # # fitted_image_width
         
-        st.session_state.google_search_new_window = st.sidebar.checkbox("Open Google search in new browser tab", value=st.session_state.google_search_new_window)
-
-        st.session_state.tool_access['show_skip_specimen'] = st.sidebar.checkbox("Show the 'skip specimen' button", value=st.session_state.tool_access['show_skip_specimen'])
-
-        ######## Additional Options ################
-        st.sidebar.header('Options') #,help='Visible as Admin')
-
-        # Access selectbox
-        user_pwd = st.text_input("Admin Password", type="password",help="use: vouchervisionadmin")
-        if user_pwd == st.session_state.pwd:
-            st.session_state.access_option = st.sidebar.selectbox("Access", ["Labeler", "Admin"])
-        else:
-            st.session_state.access_option = st.sidebar.selectbox("Access", ["Labeler", "Admin"], disabled=True)
-
-        if st.session_state.access_option in ["Admin",] and user_pwd == st.session_state.pwd:
-            st.session_state.form_hint_location = st.sidebar.selectbox("Position of the form hints", ["Left", "Right"])
-            # Warning message for 
-            distances_GPS = list(range(0, 501, 10))
-            st.session_state.distance_GPS_warn = st.select_slider('Display warning message if Verbarim/Decimal coordinates disagree by more than X km.', options=distances_GPS, value=100)
-
-            st.session_state.tool_access['hints'] = st.checkbox("Display WFO and GEO form hints",value=st.session_state.tool_access.get('hints'))
-            if not st.session_state.tool_access['hints']:
-                st.session_state.tool_access['arrow'] = False
-                # st.session_state.form_width = st.session_state.form_width_2
-                st.session_state.tool_access['arrow'] = st.checkbox("Display move arrow button for form hints :arrow_forward:",value=st.session_state.tool_access.get('hints'),disabled=True)
-            else:
-                # st.session_state.form_width = st.session_state.form_width_1
-                st.session_state.tool_access['arrow'] = st.checkbox("Display move arrow button for form hints :arrow_forward:",value=st.session_state.tool_access.get('arrow'),disabled=False)
-
-            st.session_state.tool_access['show_skip_specimen'] = st.checkbox("Display button to skip specimen and add it to transcribed_skipped.xlsx",value=st.session_state.tool_access.get('show_skip_specimen'))
-            st.session_state.tool_access['ocr'] = st.checkbox("Display button to view OCR image",value=st.session_state.tool_access.get('ocr'))
-            st.session_state.tool_access['wfo_badge'] = st.checkbox("Display WFO badge",value=st.session_state.tool_access.get('wfo_badge'))
-            st.session_state.tool_access['taxa_links'] = st.checkbox("Display buttons for Wikipedia (taxonomy), POWO, GRIN",value=st.session_state.tool_access.get('taxa_links'))
-            st.session_state.tool_access['wfo_links'] = st.checkbox("Display top 10 list of WFO taxa (WFO partial matches)",value=st.session_state.tool_access.get('wfo_links'))
-            st.session_state.tool_access['additional_info'] = st.checkbox("Display additional project information at page bottom",value=st.session_state.tool_access.get('additional_info'))
-            st.session_state.tool_access['cap'] = st.checkbox("Display capitalization buttons :eject: and :arrow_double_down:",value=st.session_state.tool_access.get('cap'))
-            st.session_state.tool_access['search'] = st.checkbox("Display quick search buttons :mag:",value=st.session_state.tool_access.get('search'))
-       
-            # # Choose a View selectbox
-            # st.session_state.view_option = st.sidebar.selectbox("Choose a View", ["Form View", "Data Editor"], disabled=True)
-
-            # # Store previous image size
-            # st.session_state.set_image_size_previous = st.session_state.set_image_size
-
-            # st.session_state.use_extra_image_options = st.sidebar.checkbox("Include toggle for fitted image view.", value=False)
-            # if st.session_state.use_extra_image_options:
-            #     image_sizes_fitted = list(range(100, 1201, 50))
-            #     st.session_state.set_image_size_px = st.select_slider(
-            #         'Set Fitted Image Width',
-            #         options=image_sizes_fitted,value=600)
-            
-            # # fitted_image_width
-            
-        else:
-            st.session_state.access_option = "Labeler"
+    else:
+        st.session_state.access_option = "Labeler" """
         
 
 
@@ -1716,6 +1722,12 @@ def on_press_confirm_content(group_option, group_options):
 ###############################################################
 ###################### Display Table ##########################
 ###############################################################
+st.session_state.color_table_viewed = "#530000"
+st.session_state.color_table_issue = "#F08080"
+st.session_state.color_table_ignored = "#000000"
+######################## Temporary ############################
+###############################################################
+
 def calculate_table_height(entries_per_page, base_height=420):
     """Calculate table height dynamically based on entries per page."""
     return base_height * (entries_per_page // 10)
@@ -1789,18 +1801,36 @@ def highlight_text_in_table(table, text_query, entries_per_page, DIS_CLASSES):
 
 
 def table_layout(t_location):
-    st.title('')
+    #st.title('')
     current_project_name = os.path.basename(os.path.dirname(os.path.dirname(os.path.join(st.session_state.SAVE_DIR, st.session_state.file_name))))
-    st.markdown(f"**Current Project:** :green[{current_project_name}]", help="This is the name of the current project")
-    st.markdown(f"**Current Transcription File:** :green[{st.session_state.file_name}]", help="This is the name of the transcribed_edited__DATETTIME.xlsx file")
-    st.markdown(f"**Total Number of Images in Project:** :green[{st.session_state.n_total_data}]", help="Number of images in the whole project, includes images that are outside the current geographic bounds.")
-    st.markdown(f"**Number of Images to Review:** :green[{st.session_state.n_manual_data}]", help="Number of images that you will actually edit that fall within the geographic bounds of this project")
+    #st.markdown(f"**Current Project:** :red[{current_project_name}]", help="This is the name of the current project")
+    st.markdown(f"**Current Transcription File:** :red[{st.session_state.file_name}]", help="This is the name of the transcribed_edited__DATETTIME.xlsx file")
+    #st.markdown(f"**Total Number of Images in Project:** :red[{st.session_state.n_total_data}]", help="Number of images in the whole project, includes images that are outside the current geographic bounds.")
+    #st.markdown(f"**Number of Images to Review:** :red[{st.session_state.n_manual_data}]", help="Number of images that you will actually edit that fall within the geographic bounds of this project")
 
     DIS_CLASSES = "display nowrap compact cell-border"
 
     c_entries, c_entries_2 = st.columns([2,10])
     with c_entries:
-        entries_per_page = st.selectbox('Entries per page:', [10, 20, 50, 100], index=2,key=f'Entries per page{t_location}')  # Default is 10
+        entries_per_page = st.selectbox(
+            'Entries per page:', 
+            [10, 20, 50, 100], 
+            index=2,
+            key=f'Entries per page{t_location}',
+            label_visibility="visible",
+            help="Select the number of entries to display per page",
+        )
+        st.markdown(
+            """
+            <style>
+            div[data-baseweb="select"] > div {
+            background-color: #530000 !important;
+            color: lightgrey !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
     if entries_per_page is None:
         entries_per_page = 10
 
@@ -2974,272 +3004,7 @@ def should_zoom_out(lat1, lon1, lat2, lon2):
 ###############################################################
 ###################### Image Handling #########################
 ###############################################################
-def image_path_and_load():
-    # Check if the current row or image option has changed
-    if ((st.session_state['last_row_to_edit'] != st.session_state.row_to_edit) or 
-        ('last_image_option' not in st.session_state) or 
-        (st.session_state['last_image_option'] != st.session_state.image_option) or 
-        st.session_state.image_rotation_change):
-
-        print("ROUTING")
-        print(f"    new row                --- {st.session_state['last_row_to_edit'] != st.session_state.row_to_edit} --- row {st.session_state.row_to_edit}")
-        print(f"    image_option not in st --- {'last_image_option' not in st.session_state}")
-        print(f"    image_option changed   --- {st.session_state['last_image_option'] != st.session_state.image_option} --- {st.session_state.image_option}")
-        print(f"    image was rotated      --- {st.session_state.image_rotation_change} --- {st.session_state.image_rotation}")
-
-        # Remember the selected image option
-        st.session_state['last_image_option'] = st.session_state.image_option
-        st.session_state.last_row_to_edit = st.session_state.row_to_edit
-
-        # Update the image path based on the selected image option
-        if st.session_state.image_option == 'Original':
-            st.session_state['image_path'] = st.session_state.data_edited.loc[st.session_state.row_to_edit, "path_to_original"]
-            st.session_state['image'] = Image.open(st.session_state['image_path'])
-            st.session_state.relative_path_to_static = image_to_server()
-        elif st.session_state.image_option == 'Cropped':
-            st.session_state['image_path'] = st.session_state.data_edited.loc[st.session_state.row_to_edit, "path_to_crop"]
-            st.session_state['image'] = Image.open(st.session_state['image_path'])
-            st.session_state.relative_path_to_static = image_to_server()
-        elif st.session_state.image_option == 'Helper':
-            st.session_state['image_path'] = st.session_state.data_edited.loc[st.session_state.row_to_edit, "path_to_helper"]
-            st.session_state['image'] = Image.open(st.session_state['image_path'])
-            st.session_state.relative_path_to_static = image_to_server()
-
-        # Load the image if the image path is not null
-        if st.session_state.image_rotation_change:
-            if pd.notnull(st.session_state['image_path']):
-                new_img_path = st.session_state['image_path']
-                new_img_path_fname = os.path.basename(new_img_path)
-                print(f'LOADING IMAGE: {new_img_path_fname}')
-                # st.session_state['image_path'] = new_img_path
-                st.session_state['image'] = apply_image_rotation(Image.open(new_img_path))
-            st.session_state.image_rotation_change = False
-            st.session_state.relative_path_to_static = image_to_server()
-        
-        
-def apply_image_rotation(image):
-    if st.session_state.image_rotation == 'left':
-        return image.rotate(90, expand=True)
-    elif st.session_state.image_rotation == 'right':
-        return image.rotate(-90, expand=True)
-    elif st.session_state.image_rotation == '180':
-        return image.rotate(180, expand=True)
-    else:
-        return image
-    
-def image_to_server():
-
-    image_path = st.session_state['image_path']
-    print(image_path)
-    if 'image_rotation' in st.session_state and st.session_state.image_rotation in ['left', 'right', '180']:
-
-        # Save the rotated image to a temporary file
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(image_path)[1])
-        st.session_state['image'].save(temp_file.name)
-        image_path = temp_file.name  # Update image_path to point to the rotated image
-        st.session_state['image_path'] = image_path
-        # st.session_state.image_rotation_change = False
-    
-    # Continue with the existing logic to determine the destination path
-    if st.session_state.image_option == 'Original':
-        static_image_path = os.path.join('static_og', os.path.basename(image_path))
-        shutil.copy(image_path, os.path.join(st.session_state.static_folder_path_o, os.path.basename(image_path)))
-    elif st.session_state.image_option == 'Cropped':
-        static_image_path = os.path.join('static_cr', os.path.basename(image_path))
-        shutil.copy(image_path, os.path.join(st.session_state.static_folder_path_c, os.path.basename(image_path)))
-    elif st.session_state.image_option == 'Helper':
-        static_image_path = os.path.join('static_h', os.path.basename(image_path))
-        shutil.copy(image_path, os.path.join(st.session_state.static_folder_path_h, os.path.basename(image_path)))
-    
-    # Generate and print the relative path to the static directory
-    relative_path_to_static = os.path.relpath(static_image_path, st.session_state.current_dir).replace('\\', '/')
-    print(f"Adding to Zoom image server: {relative_path_to_static}")
-    return relative_path_to_static
-
-
-def display_image_options_buttons(relative_path_to_static, zoom_1, zoom_2, zoom_3, zoom_4):
-    """
-    Display buttons for different image options.
-    The number and type of buttons displayed depends on st.session_state.use_extra_image_options.
-    """
-    # Define the Zoom link
-    link = f'http://localhost:8000/{relative_path_to_static}'
-    
-    current_image = st.session_state.image_option
-    if st.session_state.use_extra_image_options:
-        with zoom_1:
-            if st.button('Original', use_container_width=True):
-                st.session_state.image_option = 'Original'
-        with zoom_2:
-            if st.button('Zoom', use_container_width=True):
-                webbrowser.open_new_tab(link)
-        with zoom_3:
-            if st.button('Toggle Fitted', use_container_width=True):
-                st.session_state.is_fitted_image = not st.session_state.is_fitted_image
-                st.session_state.set_image_size = 'Fitted' if st.session_state.is_fitted_image else st.session_state.set_image_size_previous
-        if st.session_state.tool_access.get('ocr'):
-            with zoom_4:
-                if st.button('Collage', use_container_width=True):
-                    st.session_state.image_option = 'Cropped'
-    else:
-        with zoom_1:
-            if st.button('Original', use_container_width=True, help="View the full specimen image"):
-                st.session_state.image_option = 'Original'
-        with zoom_2:
-            if st.button('Zoom', use_container_width=True, help="Open the current image in a new tab. Can zoom in."):
-                webbrowser.open_new_tab(link)
-        with zoom_3:
-            if st.button('Collage', use_container_width=True, help="View the LeafMachine2 label collage. Shows all text ONLY."):
-                st.session_state.image_option = 'Cropped'
-        if st.session_state.tool_access.get('ocr'):
-            with zoom_4:
-                if st.button('OCR', use_container_width=True):
-                    st.session_state.image_option = 'Helper'
-    last_image_option = st.session_state.image_option
-    if current_image != last_image_option:
-        st.rerun()
-
-
-def display_image_rotation_buttons(r1, r2, r3, r4):
-    st.session_state.image_rotation_previous
-    with r1:
-        if st.button(':arrow_right_hook:', use_container_width=True,help="Rotate image 90 degrees counterclockwise"):
-            st.session_state.image_rotation = 'left'
-            if st.session_state.image_rotation_previous != st.session_state.image_rotation:
-                st.session_state.image_rotation_previous = st.session_state.image_rotation
-                st.session_state.image_rotation_change = True
-                st.rerun()
-
-    with r2:
-        if st.button(':leftwards_arrow_with_hook:', use_container_width=True,help="Rotate image 90 degrees clockwise"):
-            st.session_state.image_rotation = 'right'
-            if st.session_state.image_rotation_previous != st.session_state.image_rotation:
-                st.session_state.image_rotation_previous = st.session_state.image_rotation
-                st.session_state.image_rotation_change = True
-                st.rerun()
-    with r3:
-        if st.button(':arrow_double_down:', use_container_width=True,help="Rotate image 180 degrees"):
-            st.session_state.image_rotation = '180'
-            if st.session_state.image_rotation_previous != st.session_state.image_rotation:
-                st.session_state.image_rotation_previous = st.session_state.image_rotation
-                st.session_state.image_rotation_change = True
-                st.rerun()
-    with r4:
-        if st.button(':arrow_double_up:', use_container_width=True,help="Normal"):
-            st.session_state.image_rotation = '0'
-            if st.session_state.image_rotation_previous != st.session_state.image_rotation:
-                st.session_state.image_rotation_previous = st.session_state.image_rotation
-                st.session_state.image_rotation_change = True
-                st.rerun()
-
-
-def display_scrollable_image(con_image):
-    """
-    Display the image from st.session_state in a scrollable container.
-    The width and height of the container are determined by st.session_state values.
-    """
-    # Initialize the container
-    with con_image:
-        display_scrollable_image_method()
-
-
-def display_scrollable_image_method():
-
-    # Determine the desired width based on st.session_state.set_image_size
-    if st.session_state.set_image_size == "Auto Width":
-        st.image(st.session_state['image'], caption=st.session_state['image_path'], use_container_width=True)
-        return
-
-    if st.session_state.set_image_size == "Custom":
-        image_width = st.session_state.set_image_size_px
-    elif st.session_state.set_image_size == "Large":
-        image_width = 1500
-    elif st.session_state.set_image_size == "Medium":
-        image_width = 1100
-    elif st.session_state.set_image_size == "Small":
-        image_width = 800
-    elif st.session_state.set_image_size == "Fitted":
-        image_width = 600
-    else:
-        image_width = st.session_state.set_image_size_px  # For use_container_width=True
-
-    # Convert the image to base64
-    base64_image = image_to_base64(st.session_state['image'])
-
-    # Embed the image with the determined width in the custom div
-    img_html = f"""
-    <div class='scrollable-image-container'>
-        <img src='data:image/jpeg;base64,{base64_image}' alt='Image' style='width:{image_width}px'>
-    </div>
-    """
-
-    # The CSS to make this container scrollable, with dynamic height based on st.session_state.set_image_size_pxh
-    css = f"""
-    <style>
-        .scrollable-image-container {{
-            overflow: auto;
-            height: {st.session_state.set_image_size_pxh}vh;
-            width: 70vw;
-            text-align: left;
-            margin-left: 0;
-        }}
-    </style>
-    """
-    css_img_left = f"""
-    <style>
-        .scrollable-image-container {{
-            overflow: auto;
-            height: {st.session_state.set_image_size_pxh}vh;
-            width: 70vw;
-            direction: rtl;
-            text-align: left;
-            margin-left: 0;
-        }}
-    </style>
-    """
-
-    is_img_left = False
-    pts = st.session_state.image_fill.split(" ")
-    if "Left" in pts:
-        is_img_left = True
-
-    if is_img_left:
-        st.markdown(css_img_left, unsafe_allow_html=True)
-    else:
-        # Apply the CSS and then the image
-        st.markdown(css, unsafe_allow_html=True)
-    st.markdown(img_html, unsafe_allow_html=True)
-
-
-
-def display_help():
-    st.write('---')
-    st.subheader("Help")
-    with st.expander(":grey_question: Image Buttons"):
-        st.write("**Buttons**")
-        st.write(HelpText.help_btns)
-    with st.expander(":grey_question: Tool Hints"):
-        st.write("**Buttons**")
-        st.write(HelpText.help_form_btns)
-        st.write("**Tool Hints**")
-        st.write(HelpText.help_form)
-    with st.expander(":grey_question: Specimen Record"):
-        st.write("**Specimen Record**")
-        st.write(HelpText.help_specimen)
-    with st.expander(":grey_question: Enabling/Hiding Tools"):
-        st.write("**Enabling/Hiding Tools**")
-        st.write(HelpText.help_hide_tools)
-    with st.expander(":grey_question: Categories"):
-        st.write("**Categories**")
-        st.write(HelpText.help_categories)
-    with st.expander(":grey_question: Other"):
-        st.write("**World Flora Online Badge**")
-        st.write(HelpText.help_WFO_badge)
-        st.write("**Categories**")
-        st.write(HelpText.help_WFO_badge)
-
-
-
+# Moved to image_utils.py
 
 def load_yaml_settings(file_path):
     """Load YAML settings from a file."""
@@ -3456,6 +3221,16 @@ def all_but_one_is_one(tracker):
 ####################                    #######################
 ###############################################################
 if st.session_state.start_editing:
+
+    show_header_main()
+    # Add a colorful line below the header
+    st.markdown(
+        """
+        <hr style="border: 0; height: 5px; background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);">
+        """,
+        unsafe_allow_html=True,
+    )
+    
     do_print_profiler = False
     if do_print_profiler:
         profiler = cProfile.Profile()
@@ -3464,19 +3239,17 @@ if st.session_state.start_editing:
     # with st.expander('table_top', expanded=False):
     #     table_layout('top')
 
-    show_header_main()
-
     # Initialize previous_row_to_edit if it's not already in session_state
     st.session_state.setdefault('previous_row_to_edit', None)
 
     # Set the overall layout. Right is for image things, left is for text things
-    c_left, c_right, c_help = layout_image_proportion()
+    cc_left, cc_right, c_help = layout_image_proportion()
 
     # Organize the text groupings
     group_options = list(st.session_state.grouping.keys()) + ["ALL"]
     group_option = st.session_state.get("group_option", group_options[0])
 
-    group_option_cols = c_left.columns(len(group_options))
+    group_option_cols = cc_right.columns(len(group_options))
 
 
     # Layout for Form View (alternative is Spreadsheet View)
@@ -3517,7 +3290,7 @@ if st.session_state.start_editing:
 
 
 
-    with c_left:
+    with cc_right:
         update_progress_bar()
         if (st.session_state.progress == 0) and group_options[0] not in st.session_state.data_edited.loc[st.session_state.row_to_edit, "track_edit"]: 
             # Add default option if "track_edit" is empty and doesn't contain the default option already
@@ -3538,7 +3311,7 @@ if st.session_state.start_editing:
                 st.button("Next Img", help="Cannot move to next image until all categories are unlocked", type="primary", use_container_width=True, on_click=on_press_next, args=[group_options],disabled=True)
                 # st.info("Please confirm all categories before moving to next image")
 
-        # group_option_cols = c_left.columns(len(group_options))
+        # group_option_cols = cc_right.columns(len(group_options))
         # Display a progress bar showing how many of the group_options are present in track_edit
         
                     
@@ -3597,7 +3370,7 @@ if st.session_state.start_editing:
 
     ### Show the spreadsheet layout
     # elif st.session_state.view_option == "Data Editor":
-        # with c_left:
+        # with cc_right:
         #     st.write("Skipping ahead (editing in the 'Form View' out of order) will cause issues if all 5 groups are selected while skipping ahead.")
         #     st.write("If skipping ahead, only use the 'ALL' option until returning to sequential editing.")
         #     # Reorder the columns to have "track_view" and "track_edit" at the beginning
@@ -3689,7 +3462,7 @@ if st.session_state.start_editing:
 
         
     ### Display the image
-    with c_right:
+"""     with c_right:
         image_path_and_load()
 
         if st.session_state.tool_access.get('ocr'):
@@ -3717,7 +3490,135 @@ if st.session_state.start_editing:
         display_scrollable_image(con_image)
 
         display_image_rotation_buttons(r1, r2, r3, r4)
-        # relative_path_to_static = image_to_server()
+        # relative_path_to_static = image_to_server() """
+    
+with cc_left:
+    r1, r2, zoom_1, zoom_2, zoom_3, zoom_4, r3, r4 = st.columns([1,1,2,2,2,2,1,1])
+    con_image = st.container()
+
+    image_path_and_load()
+
+    # Generate the full URL for the image
+    image_url = f"http://localhost:8000/{st.session_state.relative_path_to_static}"
+
+    thumbnail_max_width = 400  # Set a maximum width for the thumbnail
+
+    # Ensure session state variables are initialized
+    if 'relative_path_to_static' not in st.session_state:
+        st.session_state.relative_path_to_static = ''
+
+    # HTML and CSS for the thumbnail and zoom effect
+    thumbnail_html = f"""
+    <style>
+    /* Container for the thumbnail */
+    .thumbnail-container {{
+        position: relative;
+        display: inline-block;
+        max-width: {thumbnail_max_width}px; /* Set a maximum width for the thumbnail */
+        height: auto; /* Allow height to adjust automatically */
+    }}
+
+    /* The thumbnail image */
+    .thumbnail {{
+        width: 100%;
+        height: auto; /* Maintain aspect ratio */
+        object-fit: contain; /* Ensure the entire image fits within the container */
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
+    }}
+
+    /* Floating zoom-in container */
+    .zoom-container {{
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: {thumbnail_max_width}px; /* Width of the zoomed-in area */
+        height: {thumbnail_max_width}px; /* Height of the zoomed-in area */
+        border: 2px solid #ccc;
+        background-color: white;
+        background-image: url('{image_url}');
+        background-repeat: no-repeat;
+        background-size: 1000px auto; /* Adjust this to control zoom level */
+        z-index: 1000;
+        pointer-events: none; /* Prevent interaction with the zoom container */
+    }}
+    </style>
+
+    <div class="thumbnail-container" onclick="showZoom(event)" onmousemove="moveZoom(event)" onmouseleave="hideZoom()">
+        <!-- Thumbnail -->
+        <img src="{image_url}" alt="Thumbnail" class="thumbnail">
+
+        <!-- Floating zoom-in image -->
+        <div class="zoom-container" id="zoom-container"></div>
+    </div>
+
+    <script>
+    function showZoom(event) {{
+        var zoomContainer = document.getElementById('zoom-container');
+        zoomContainer.style.display = 'block'; // Show the zoom container on click
+    }}
+
+    function moveZoom(event) {{
+        var zoomContainer = document.getElementById('zoom-container');
+        var rect = event.target.getBoundingClientRect();
+        var x = event.clientX - rect.left; // X position within the thumbnail
+        var y = event.clientY - rect.top;  // Y position within the thumbnail
+
+        // Calculate background position for the zoomed-in image
+        var zoomWidth = zoomContainer.offsetWidth;
+        var zoomHeight = zoomContainer.offsetHeight;
+        var bgWidth = 800; // Match the background-size width in CSS
+        var bgHeight = event.target.naturalHeight * (bgWidth / event.target.naturalWidth); // Maintain aspect ratio
+
+        var bgPosX = -(x / rect.width) * bgWidth + zoomWidth / 2;
+        var bgPosY = -(y / rect.height) * bgHeight + zoomHeight / 2;
+
+        // Set the position of the zoom container and background
+        zoomContainer.style.left = x - zoomWidth / 2 + 'px';
+        zoomContainer.style.top = y - zoomHeight / 2 + 'px';
+        zoomContainer.style.backgroundPosition = bgPosX + 'px ' + bgPosY + 'px';
+    }}
+
+    function hideZoom() {{
+        var zoomContainer = document.getElementById('zoom-container');
+        zoomContainer.style.display = 'none'; // Hide the zoom container when the mouse leaves
+    }}
+    </script>
+    """
+
+    # Load the image to get its dimensions
+    image_path = st.session_state.relative_path_to_static
+    image_full_path = os.path.join(st.session_state.static_folder_path, image_path)
+    try:
+        with Image.open(image_full_path) as img:
+            width, height = img.size
+            # Derive the height for the component based on the image height
+            derived_height = int((thumbnail_max_width / width) * height)  # Calculate height while maintaining aspect ratio with width set to 400
+    except Exception as e:
+        #st.error(f"Error loading image: {e}")
+        derived_height = thumbnail_max_width  # Fallback height
+
+    # Use the derived height for the components.html
+    components.html(thumbnail_html, height=derived_height)
+
+    # Use JavaScript to open the image in a new browser window
+    # Display the button to open the image in a new tab
+    st.markdown(
+        f"""
+        <a href="{image_url}" target="_blank">
+            <button style="padding: 5px 10px; font-size: 12px; background-color: #B22222; color: white; border: none; border-radius: 2px; cursor: pointer;">
+                <img src="https://img.icons8.com/ios-glyphs/30/ffffff/external-link.png" alt="Open Image" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+                Open
+            </button>
+        </a>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    #display_image_options_buttons(st.session_state.relative_path_to_static, zoom_1, zoom_2, zoom_3, zoom_4)
+    #display_scrollable_image(con_image)
+    #display_image_rotation_buttons(r1, r2, r3, r4)
 
     table_layout('bottom')
 
@@ -3762,7 +3663,7 @@ if st.session_state.start_editing:
         st.header("Additional Project Information")
         display_prompt_template()
     
-    display_help()
+    #display_help()
     
 
     if do_print_profiler:
